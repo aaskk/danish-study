@@ -40,6 +40,9 @@ nav button.on{color:var(--accent);font-weight:600}
 .row{display:flex;gap:10px}.row>*{flex:1}
 .flip{min-height:260px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;cursor:pointer;user-select:none}
 .flip .big{font-size:28px;font-weight:700;margin:6px 0}
+.spk{border:0;background:var(--chip);color:var(--fg);border-radius:999px;min-width:44px;min-height:44px;font-size:20px;line-height:1;padding:0 10px;margin-left:6px;vertical-align:middle;cursor:pointer}
+.spk.sm{min-width:36px;min-height:36px;font-size:16px}
+.ttshint{font-size:13px;background:var(--badbg);color:var(--fg);border-radius:10px;padding:8px 10px;margin:8px 0}
 .flip .ex{font-style:italic;margin-top:12px}
 .tag{display:inline-block;font-size:12px;background:var(--chip);border-radius:6px;padding:2px 8px;margin:2px;color:var(--muted)}
 .tag.warn{background:var(--badbg);color:var(--bad)}
@@ -182,7 +185,7 @@ var LS="dk_pd3_v1";
 var S;
 try{S=JSON.parse(localStorage.getItem(LS)||"null");}catch(e){S=null;}
 if(!S)S={cards:{},days:{},dir:"da",mist:{},drillStats:{}};
-S.lessons=S.lessons||{};
+S.lessons=S.lessons||{};if(!S.rate)S.rate=0.9;
 S.cards=S.cards||{};S.days=S.days||{};S.mist=S.mist||{};S.drillStats=S.drillStats||{};
 function save(){try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}}
 function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
@@ -229,10 +232,11 @@ function home(){
  '<div class="card"><h3>Send til tutor</h3><p class="small muted">'+newEvents().length+' nye øvelser siden sidste rapport.</p>'+tutorBtn()+'</div>'+
  '<div class="card"><h3>Leitner-kasser</h3><div class="grid">'+[1,2,3,4,5].map(function(b){return '<div><b>'+boxes[b]+'</b>Kasse '+b+'</div>';}).join("")+'</div>'+
  '<p class="small muted">Kasse 1 = every day · 2 = 2 days · 3 = 4 days · 4 = 8 days · 5 = 16 days</p></div>'+
+ '<div class="card"><h3>Lyd (oplæsning)</h3>'+rateSeg()+'</div>'+
  '<div class="card"><h3>Fremskridt</h3><p class="small">🔥 Streak: <b>'+streak()+'</b> dage<br>✓ Svar i dag: <b>'+(S.days[today()]||0)+'</b><br>Σ Svar i alt: <b>'+tot+'</b><br>📚 Kort i alt: <b>'+CARDS.length+'</b></p></div>'+
  '<p class="small muted">Progress is saved on this device. Cards from Notion, updated '+DATA_DATE+'.</p>'+
  '<button class="btn small" id="reset">Nulstil fremskridt (reset)</button>';
- $("hgo").onclick=function(){go("cards");};if($("hless"))$("hless").onclick=function(){go("less");};$("hq").onclick=function(){go("quiz");};$("hd").onclick=function(){go("drill");};
+ renderTtsHint();$("hgo").onclick=function(){go("cards");};if($("hless"))$("hless").onclick=function(){go("less");};$("hq").onclick=function(){go("quiz");};$("hd").onclick=function(){go("drill");};
  $("reset").onclick=function(){if(confirm("Reset all progress on this device?")){S={cards:{},days:{},dir:S.dir,mist:{},drillStats:{},lessons:{}};save();renderBadge();renderStats();home();}};
 }
 
@@ -261,8 +265,8 @@ function lessonsView(){
 function lessonDetail(date){var l=LESSONS.filter(function(x){return x.date===date;})[0];if(!l)return lessonsView();var s=lst(l);
  var h='<button class="btn" id="lback">← Alle lektioner</button><p class="small muted">'+esc(fmtDate(l.date))+'</p><h2>'+esc(l.title)+'</h2>'+
  '<div class="card md">'+md(l.explanation)+'</div>';
- if(l.words&&l.words.length)h+='<div class="card"><h3>Nye ord</h3>'+l.words.map(function(w){return '<p><b>'+esc(w.da)+'</b> – '+esc(w.en)+(w.ex?'<br><i class="small">'+esc(w.ex)+'</i>':'')+'</p>';}).join("")+'</div>';
- if(l.examples&&l.examples.length)h+='<div class="card"><h3>Eksempler</h3><ul>'+l.examples.map(function(e){return '<li><i>'+esc(e)+'</i></li>';}).join("")+'</ul></div>';
+ if(l.words&&l.words.length)h+='<div class="card"><h3>Nye ord</h3>'+l.words.map(function(w){return '<p><b>'+esc(w.da)+'</b>'+spk(w.da,1)+' – '+esc(w.en)+(w.ex?'<br><i class="small">'+esc(w.ex)+'</i>'+spk(w.ex,1):'')+'</p>';}).join("")+'</div>';
+ if(l.examples&&l.examples.length)h+='<div class="card"><h3>Eksempler</h3><ul>'+l.examples.map(function(e){return '<li><i>'+esc(e)+'</i>'+spk(e,1)+'</li>';}).join("")+'</ul></div>';
  h+='<div class="card"><h3>Quiz</h3>'+l.quiz.map(function(q,i){return '<div class="qa" id="qa'+i+'"></div>';}).join("")+'</div><div id="lsum"></div>';
  app.innerHTML=h;window.scrollTo(0,0);
  $("lback").onclick=lessonsView;
@@ -272,7 +276,7 @@ function renderLQ(l,i){var q=l.quiz[i],s=lst(l),a=s.ans[i],el=$("qa"+i);
  var h='<div class="prompt">'+(i+1)+'. '+inl(q.q).replace(/___/g,'<b>____</b>')+'</div>';
  if(!a){h+='<form data-f="'+i+'" autocomplete="off"><input type="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Skriv dit svar…"><button class="btn primary" type="submit">Tjek</button></form>';}
  else{var head=a.pending?"Sammenlign:":a.ok?(a.self?"Rigtigt! ✅ (self-graded)":a.exact===false?"Rigtigt! ✅ Correct spelling: "+esc(a.match):"Rigtigt! ✅"):"Ikke helt ❌";
-  h+='<p class="small">Dit svar: <b>'+esc(a.input)+'</b></p><div class="fb '+(a.ok?'ok':'bad')+'"><b>'+head+'</b><br>Model answer: <b>'+esc(q.a[0])+'</b><br><span class="small">'+inl(q.x||'')+'</span></div>';
+  h+='<p class="small">Dit svar: <b>'+esc(a.input)+'</b></p><div class="fb '+(a.ok?'ok':'bad')+'"><b>'+head+'</b><br>Model answer: <b>'+esc(q.a[0])+'</b>'+spk(filled(q.q,q.a[0]),1)+'<br><span class="small">'+inl(q.x||'')+'</span></div>';
   if(a.pending)h+='<p class="small muted">Was your answer right (another correct way to say it)?</p><div class="row"><button class="btn bad" data-sg="0">Not quite</button><button class="btn ok" data-sg="1">I got it</button></div>';
  }
  el.innerHTML=h;
@@ -295,6 +299,39 @@ function renderLSum(l){var s=lst(l),qn=l.quiz.length,keys=Object.keys(s.ans),don
  if($("lredo"))$("lredo").onclick=function(){var s2=lst(l);s2.ans={};s2.finished=false;setLst(l,s2);lessonDetail(l.date);};
 }
 
+
+
+/* ---------- Text-to-speech (Danish) ---------- */
+var TTS={ok:("speechSynthesis" in window)&&typeof SpeechSynthesisUtterance!=="undefined",voice:null,checked:false};
+function pickVoice(){if(!TTS.ok)return null;var vs=[];try{vs=window.speechSynthesis.getVoices()||[];}catch(e){vs=[];}
+ if(vs.length)TTS.checked=true;
+ var da=vs.filter(function(v){return /^da([-_]|$)/i.test(v.lang||"");});
+ TTS.voice=da.filter(function(v){return /sara/i.test(v.name);})[0]||da.filter(function(v){return /^da[-_]DK$/i.test(v.lang);})[0]||da[0]||null;
+ renderTtsHint();return TTS.voice;}
+if(TTS.ok){pickVoice();try{window.speechSynthesis.addEventListener("voiceschanged",pickVoice);}catch(e){window.speechSynthesis.onvoiceschanged=pickVoice;}
+ setTimeout(function(){TTS.checked=true;pickVoice();},2000);}
+var TTS_HINT="Add a Danish voice in iPhone Settings > Accessibility > Spoken Content > Voices > Danish";
+function renderTtsHint(){var el=document.getElementById("ttshint");if(!el)return;var show=!TTS.ok||(TTS.checked&&!TTS.voice);el.style.display=show?"block":"none";el.textContent=TTS.ok?TTS_HINT:"Audio is not supported in this browser.";}
+function cleanSay(t){return String(t||"").replace(/\*\*?|~~/g,"").replace(/\s*\/\s*/g,", ").replace(/\s+/g," ").trim();}
+function speak(text){if(!TTS.ok){renderTtsHint();return;}var t=cleanSay(text);if(!t)return;
+ try{window.speechSynthesis.cancel();}catch(e){}
+ var u=new SpeechSynthesisUtterance(t);u.lang=(TTS.voice&&TTS.voice.lang)||"da-DK";if(TTS.voice||pickVoice())u.voice=TTS.voice;u.rate=S.rate||0.9;u.pitch=1;
+ try{window.speechSynthesis.speak(u);}catch(e){}
+ if(!TTS.voice){TTS.checked=true;renderTtsHint();}}
+function spk(text,small){if(!text)return "";return '<button type="button" class="spk'+(small?' sm':'')+'" data-say="'+esc(cleanSay(text))+'" aria-label="Læs højt">🔊</button>';}
+// capture phase: runs before card flip handlers, directly inside the user tap (required on iOS)
+document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("[data-say]");if(!b)return;e.preventDefault();e.stopPropagation();speak(b.getAttribute("data-say"));},true);
+// Fill ___ blanks with the answer, drop hints like "(stor)" and English instructions
+function filled(q,ans){q=String(q||"").replace(/\*/g,"");ans=String(ans||"");
+ var n=(q.match(/___/g)||[]).length;if(!n)return ans;
+ var w=ans.split(/\s+/),parts;
+ if(n===1)parts=[ans];else if(w.length===n)parts=w;else return ans;
+ var i=0,out=q.replace(/___/g,function(){return parts[i++];});
+ out=out.replace(/\s*\([^)]*\)/g,"").replace(/\s*\b(Write|Fill|Translate|Rewrite|Fix|Choose)\b[^.]*\.?\s*$/,"").replace(/^[^:]*\b(Fill in|Translate|Rewrite|Fix)[^:]*:\s*/i,"");
+ return out.replace(/^…,?\s*/,"").replace(/\s+([.,!?])/g,"$1").replace(/\s+/g," ").trim();}
+function rateSeg(){return '<div class="seg" style="margin:8px 0 0"><button data-rate="0.9" class="'+(S.rate!==0.7?"on":"")+'">🔊 Normal</button><button data-rate="0.7" class="'+(S.rate===0.7?"on":"")+'">🐢 Langsom</button></div><div id="ttshint" class="ttshint" style="display:none"></div>';}
+document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("[data-rate]");if(!b)return;S.rate=parseFloat(b.dataset.rate);save();
+ b.parentNode.querySelectorAll("[data-rate]").forEach(function(x){x.classList.toggle("on",x===b);});speak("Hej, jeg taler dansk.");});
 
 /* ---------- Send til tutor ---------- */
 function tutorBtn(){return '<button class="btn primary" data-tutor="1">📤 Send til tutor</button>';}
@@ -381,8 +418,8 @@ function renderCard(){
  app.innerHTML=dirHtml+'<div class="bar"><div style="width:'+Math.round(fc.i/fc.queue.length*100)+'%"></div></div>'+
  '<p class="small muted">'+(fc.i+1)+' / '+fc.queue.length+' · Kasse '+s.box+'</p>'+
  '<div class="card flip" id="flip"><div><span class="tag">'+esc(c.type)+'</span><span class="tag">'+esc(c.topic)+'</span>'+(s.wrong>0?'<span class="tag warn">✗ '+s.wrong+'</span>':'')+'</div>'+
- '<div class="big">'+esc(front)+'</div>'+
- (fc.flipped?'<hr style="width:60%;border:0;border-top:1px solid var(--line)"><div class="big" style="font-size:22px">'+esc(back)+'</div>'+(c.ex?'<div class="ex">'+esc(c.ex)+'</div>':''):'<p class="muted small">Tryk for at vende (tap to flip)</p>')+
+ '<div class="big">'+esc(front)+(S.dir==="da"?spk(c.da):'')+'</div>'+
+ (fc.flipped?'<hr style="width:60%;border:0;border-top:1px solid var(--line)"><div class="big" style="font-size:22px">'+esc(back)+(S.dir==="en"?spk(c.da):'')+'</div>'+(c.ex?'<div class="ex">'+esc(c.ex)+spk(c.ex,1)+'</div>':''):'<p class="muted small">Tryk for at vende (tap to flip)</p>')+
  '</div>'+
  (fc.flipped?'<div class="row"><button class="btn bad" id="no">✗ Didn\'t</button><button class="btn ok" id="yes">✓ Knew it</button></div>':'<button class="btn primary" id="show">Vis svar</button>');
  bindDir();
@@ -417,7 +454,7 @@ function renderQ(){
   if(ok)qz.score++;app.querySelectorAll(".opt")[q.c].classList.add("right");if(!ok)b.classList.add("wrong");
   if(q.card&&!ok){var s=st(q.card);s.wrong=(s.wrong||0)+1;s.box=1;s.next=today();setSt(q.card,s);}
   tick(ok);logEv({k:"quiz",ok:ok,item:q.q,typed:q.o[i],correct:q.o[q.c],topic:q.card?("ord: "+q.card.topic):"grammatik"});
-  $("fb").innerHTML='<div class="fb '+(ok?"ok":"bad")+'"><b>'+(ok?"Rigtigt! ✅":"Ikke helt ❌ — "+esc(q.o[q.c]))+'</b>'+(q.x?'<br><span class="small">'+esc(q.x)+'</span>':'')+'</div><button class="btn primary" id="nx">Næste →</button>';
+  $("fb").innerHTML='<div class="fb '+(ok?"ok":"bad")+'"><b>'+(ok?"Rigtigt! ✅":"Ikke helt ❌ — "+esc(q.o[q.c]))+'</b>'+spk(q.card?q.card.da:filled(q.q,q.o[q.c]),1)+(q.x?'<br><span class="small">'+esc(q.x)+'</span>':'')+'</div><button class="btn primary" id="nx">Næste →</button>';
   $("nx").onclick=function(){qz.i++;qz.answered=false;renderQ();};};});
 }
 
@@ -443,7 +480,7 @@ function renderDrill(){
   var ds=S.drillStats[d.t]||{ok:0,n:0};ds.n++;if(r.ok)ds.ok++;S.drillStats[d.t]=ds;tick(r.ok);logEv({k:"drill",ok:r.ok,item:d.q,typed:inp.value,correct:d.a[0],topic:d.t});
   inp.readOnly=true;$("sub").textContent="Næste →";
   $("fb").innerHTML='<div class="fb '+(r.ok?"ok":"bad")+'"><b>'+(r.ok?(r.exact?"Rigtigt! ✅":"Rigtigt! ✅ Correct spelling: "+esc(r.ans)):"Ikke helt ❌")+'</b>'+
-   (!r.ok?'<br>Svar: <b>'+esc(d.a[0])+'</b>':'')+'<br><span class="small">'+esc(d.x)+'</span></div>';};
+   (!r.ok?'<br>Svar: <b>'+esc(d.a[0])+'</b>':'')+spk(filled(d.q,d.a[0]),1)+'<br><span class="small">'+esc(d.x)+'</span></div>';};
  setTimeout(function(){try{inp.focus();}catch(e){}},50);
 }
 function bindSel(){$("tsel").onchange=function(){drTopic=this.value;S.drTopic=drTopic;save();drillView();};}
