@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dansk PD3">
+<meta name="theme-color" content="#c8102e">
+<meta name="color-scheme" content="light dark">
+<title>Dansk PD3 · Modul 3</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23c8102e'/%3E%3Crect x='52' width='22' height='180' fill='%23fff'/%3E%3Crect y='79' width='180' height='22' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23c8102e'/%3E%3Crect x='52' width='22' height='180' fill='%23fff'/%3E%3Crect y='79' width='180' height='22' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#f6f6f8;--card:#fff;--fg:#1c1c1e;--muted:#6b6b70;--line:#e2e2e6;--accent:#c8102e;--ok:#1f9d55;--bad:#d64545;--okbg:#e6f6ec;--badbg:#fdeaea;--chip:#efeff3}
+@media (prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--fg:#f2f2f7;--muted:#9a9aa0;--line:#2f2f33;--accent:#ff4d5e;--ok:#34c759;--bad:#ff6b6b;--okbg:#10301c;--badbg:#3a1414;--chip:#2c2c2e}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif}
+body{padding:env(safe-area-inset-top) 0 calc(76px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+header h1{font-size:20px;margin:0}
+.stats{display:flex;gap:8px;font-size:14px}
+.pill{background:var(--chip);border-radius:999px;padding:4px 10px;white-space:nowrap}
+main{padding:14px 16px;max-width:640px;margin:0 auto}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;background:none;color:var(--muted);font-size:12px;padding:8px 2px 10px;min-height:60px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button .i{font-size:22px}
+nav button.on{color:var(--accent);font-weight:600}
+.card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.muted{color:var(--muted)}.small{font-size:14px}
+.btn{display:block;width:100%;min-height:52px;border-radius:14px;border:0;font-size:17px;font-weight:600;padding:12px;margin:8px 0;background:var(--chip);color:var(--fg)}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.ok{background:var(--ok);color:#fff}.btn.bad{background:var(--bad);color:#fff}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.flip{min-height:260px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;cursor:pointer;user-select:none}
+.flip .big{font-size:28px;font-weight:700;margin:6px 0}
+.flip .ex{font-style:italic;margin-top:12px}
+.tag{display:inline-block;font-size:12px;background:var(--chip);border-radius:6px;padding:2px 8px;margin:2px;color:var(--muted)}
+.tag.warn{background:var(--badbg);color:var(--bad)}
+.seg{display:flex;background:var(--chip);border-radius:12px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;border:0;background:none;color:var(--fg);padding:10px;border-radius:10px;font-size:15px;min-height:44px}
+.seg button.on{background:var(--card);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.opt{display:block;width:100%;text-align:left;min-height:54px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--fg);font-size:17px;padding:12px 14px;margin:8px 0}
+.opt.right{border-color:var(--ok);background:var(--okbg)}.opt.wrong{border-color:var(--bad);background:var(--badbg)}
+.fb{border-radius:12px;padding:12px 14px;margin-top:10px}
+.fb.ok{background:var(--okbg)}.fb.bad{background:var(--badbg)}
+input[type=text]{width:100%;font-size:19px;padding:14px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--fg);outline:none}
+input[type=text]:focus{border-color:var(--accent)}
+.prompt{font-size:20px;margin:6px 0 12px}
+.bar{height:8px;background:var(--chip);border-radius:4px;overflow:hidden;margin:6px 0 12px}.bar>div{height:100%;background:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;text-align:center}
+.grid div{background:var(--chip);border-radius:10px;padding:8px 0;font-size:13px}.grid b{display:block;font-size:20px}
+h2{font-size:22px;margin:4px 0 12px}h3{margin:0 0 8px;font-size:17px}
+.strike{text-decoration:line-through;color:var(--bad)}
+select{width:100%;font-size:17px;padding:12px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--fg);margin-bottom:10px}
+</style>
+</head>
+<body>
+<header><h1>🇩🇰 Dansk PD3</h1><div class="stats"><span class="pill" id="streak">🔥 0</span><span class="pill" id="today">✓ 0</span></div></header>
+<main id="app"></main>
+<nav>
+ <button data-v="home"><span class="i">🏠</span>Hjem</button>
+ <button data-v="cards"><span class="i">🃏</span>Kort</button>
+ <button data-v="quiz"><span class="i">✅</span>Quiz</button>
+ <button data-v="drill"><span class="i">✍️</span>Grammatik</button>
+ <button data-v="mist"><span class="i">🔁</span>Fejl</button>
+</nav>
+<script>
+"use strict";
+var CARDS=[{"id": "at ansætte (ansatte, ansat)", "da": "at ansætte (ansatte, ansat)", "en": "to hire / employ", "ex": "Firmaet har ansat en ny kollega.", "type": "verb", "topic": "work", "box": 1, "next": "2026-10-21", "wrong": 0}, {"id": "datid vs. perfektum", "da": "datid vs. perfektum", "en": "simple past (datid) for a finished, stated past time (i går, i sidste uge); perfektum (har/er + participle) for result now, no time stated, or a period up to now (i år, i to uger)", "ex": "I går havde jeg en jobsamtale. / Jeg har haft tre jobsamtaler i år.", "type": "grammar", "topic": "work", "box": 1, "next": "2026-10-21", "wrong": 0}, {"id": "en jobsamtale", "da": "en jobsamtale", "en": "a job interview", "ex": "I går havde jeg en jobsamtale på et sygehus.", "type": "noun", "topic": "work", "box": 1, "next": "2026-10-21", "wrong": 0}, {"id": "en løn", "da": "en løn", "en": "a salary / wage (lønnen = the salary)", "ex": "Lønnen er god, men arbejdstiden er lang.", "type": "noun", "topic": "work", "box": 1, "next": "2026-10-21", "wrong": 0}, {"id": "ny (nyt, nye)", "da": "ny (nyt, nye)", "en": "new", "ex": "Den nye kollega er meget sød.", "type": "adjective", "topic": "work", "box": 1, "next": "2026-10-20", "wrong": 0}, {"id": "bestemt form: den/det/de + adjektiv-e", "da": "bestemt form: den/det/de + adjektiv-e", "en": "definite adjective: after den/det/de or min/din/hans etc., the adjective always ends in -e (lille stays lille; plural små)", "ex": "Den store lejlighed / det store sygehus / de store lejligheder; min nye kollega", "type": "grammar", "topic": "housing", "box": 1, "next": "2026-10-20", "wrong": 0}, {"id": "gammel (gammelt, gamle)", "da": "gammel (gammelt, gamle)", "en": "old", "ex": "Vi bor i den gamle lejlighed på Nørrebro.", "type": "adjective", "topic": "housing", "box": 1, "next": "2026-10-20", "wrong": 0}, {"id": "at vente på", "da": "at vente på", "en": "to wait for", "ex": "Vi venter på bussen til Nørrebro.", "type": "phrase", "topic": "everyday", "box": 1, "next": "2026-10-18", "wrong": 0}, {"id": "at søge om", "da": "at søge om", "en": "to apply for (leave, permission, citizenship) — for a job: søge et job, no om", "ex": "Jeg søger om orlov fra mit arbejde.", "type": "phrase", "topic": "work", "box": 1, "next": "2026-10-18", "wrong": 0}, {"id": "at være interesseret i", "da": "at være interesseret i", "en": "to be interested in", "ex": "Er du interesseret i jobbet?", "type": "phrase", "topic": "work", "box": 1, "next": "2026-10-18", "wrong": 0}, {"id": "faste præpositioner (verb+prep)", "da": "faste præpositioner (verb+prep)", "en": "fixed verb+preposition pairs: søge om, vente på, være interesseret i — the preposition is fixed and cannot be swapped", "ex": "Jeg søger om orlov. Vi venter på svaret. Er du interesseret i jobbet?", "type": "grammar", "topic": "work", "box": 1, "next": "2026-10-18", "wrong": 0}, {"id": "ledig", "da": "ledig", "en": "vacant / available (job, flat); also unemployed", "ex": "Firmaet har en ledig stilling som sygeplejerske.", "type": "adjective", "topic": "work", "box": 1, "next": "2026-10-17", "wrong": 0}, {"id": "dyr", "da": "dyr", "en": "expensive", "ex": "Lejlighederne på Nørrebro er dyre.", "type": "adjective", "topic": "housing", "box": 1, "next": "2026-10-17", "wrong": 0}, {"id": "adjektivbøjning (ubestemt form)", "da": "adjektivbøjning (ubestemt form)", "en": "indefinite adjective endings: en-word = no ending (en stor lejlighed), et-word = +t (et stort hus), plural = +e (store huse). lille → små in plural", "ex": "Hun arbejder på et stort sygehus. Vi bor i en lille lejlighed.", "type": "grammar", "topic": "housing", "box": 1, "next": "2026-10-17", "wrong": 0}, {"id": "billig", "da": "billig", "en": "cheap / inexpensive", "ex": "Vi leder efter en billig lejlighed.", "type": "adjective", "topic": "housing", "box": 1, "next": "2026-10-17", "wrong": 0}, {"id": "en kollega", "da": "en kollega", "en": "a colleague", "ex": "Min kollega har mødt op tidligt i dag.", "type": "noun", "topic": "work", "box": 1, "next": "2026-10-16", "wrong": 0}, {"id": "perfektum (har/er)", "da": "perfektum (har/er)", "en": "present perfect: har + participle for most verbs; er + participle for motion/change of state", "ex": "Jeg har sendt en ansøgning. Hun er blevet syg.", "type": "grammar", "topic": "everyday", "box": 1, "next": "2026-10-16", "wrong": 0}, {"id": "at møde op", "da": "at møde op", "en": "to show up / report for work or an appointment", "ex": "Har du mødt op til mødet?", "type": "phrase", "topic": "work", "box": 1, "next": "2026-10-16", "wrong": 0}, {"id": "en recept", "da": "en recept", "en": "a prescription (from a doctor)", "ex": "Lægen har skrevet en recept.", "type": "noun", "topic": "health", "box": 1, "next": "2026-10-16", "wrong": 0}, {"id": "at bo til leje", "da": "at bo til leje", "en": "to rent / live as a tenant", "ex": "Vi boede til leje i tre år, før vi købte.", "type": "phrase", "topic": "housing", "box": 1, "next": "2026-10-15", "wrong": 0}, {"id": "omvendt ordstilling (V2)", "da": "omvendt ordstilling (V2)", "en": "inversion: after a fronted time/place phrase, verb comes before the subject in main clauses", "ex": "I går cyklede jeg på arbejde.", "type": "grammar", "topic": "everyday", "box": 1, "next": "2026-10-15", "wrong": 0}, {"id": "et sygehus", "da": "et sygehus", "en": "a hospital", "ex": "Hun arbejder på et stort sygehus i København.", "type": "noun", "topic": "health", "box": 1, "next": "2026-10-16", "wrong": 1}, {"id": "en frokostpause", "da": "en frokostpause", "en": "a lunch break", "ex": "I frokostpausen spiser vi ofte i kantinen.", "type": "noun", "topic": "work", "box": 1, "next": "2026-10-15", "wrong": 0}, {"id": "en læge", "da": "en læge", "en": "a doctor", "ex": "Jeg skal ringe til lægen i morgen.", "type": "noun", "topic": "health", "box": 1, "next": "2026-10-15", "wrong": 0}, {"id": "fordi (+ ledsætning)", "da": "fordi (+ ledsætning)", "en": "because — subordinate clause: adverb (ikke) goes BEFORE the verb", "ex": "Jeg kommer ikke, fordi jeg ikke har tid.", "type": "grammar", "topic": "everyday", "box": 1, "next": "2026-10-15", "wrong": 0}, {"id": "en lejlighed", "da": "en lejlighed", "en": "an apartment / flat", "ex": "Vi bor i en lille lejlighed på Nørrebro.", "type": "noun", "topic": "housing", "box": 1, "next": "2026-10-15", "wrong": 0}, {"id": "en ansøgning", "da": "en ansøgning", "en": "an application (job application)", "ex": "Jeg har sendt en ansøgning til firmaet.", "type": "noun", "topic": "work", "box": 1, "next": "2026-10-16", "wrong": 1}, {"id": "en husleje", "da": "en husleje", "en": "rent (for housing)", "ex": "Huslejen er steget med 500 kroner om måneden.", "type": "noun", "topic": "housing", "box": 1, "next": "2026-10-16", "wrong": 1}, {"id": "selvom (+ ledsætning)", "da": "selvom (+ ledsætning)", "en": "even though / although — subordinate word order", "ex": "Selvom det regner, cykler jeg på arbejde.", "type": "grammar", "topic": "everyday", "box": 1, "next": "2026-10-15", "wrong": 0}, {"id": "at søge et job", "da": "at søge et job", "en": "to apply for a job", "ex": "Jeg vil søge et job som sygeplejerske.", "type": "phrase", "topic": "work", "box": 1, "next": "2026-10-15", "wrong": 0}, {"id": "at have ondt i", "da": "at have ondt i", "en": "to have a pain in / to hurt (body part)", "ex": "Jeg har ondt i hovedet i dag.", "type": "phrase", "topic": "health", "box": 1, "next": "2026-10-15", "wrong": 0}];
+var ERRORS=[{"mistake": "or pay husleje", "correction": "og betaler husleje (and = og; at betale, present tense betaler)", "pattern": "other", "date": "2026-10-14", "count": 1}, {"mistake": "et lille lejlighed", "correction": "en lille lejlighed (lejlighed is an en-word)", "pattern": "gender en/et", "date": "2026-10-14", "count": 1}, {"mistake": "cykkled / i gar", "correction": "cyklede / i går (past tense of at cykle: cyklede; å)", "pattern": "spelling", "date": "2026-10-14", "count": 1}];
+var DATA_DATE="2026-10-20";
+
+/* ---------- Grammar drills (typed) ---------- */
+// t: topic, q: prompt (___ = blank), a: accepted answers, x: explanation, h: hint (optional)
+var DRILLS=[
+ // V2 inversion
+ {t:"V2",q:"I morgen ___ jeg til lægen. (ringe, nutid)",a:["ringer"],x:"Fronted time phrase → verb second: I morgen ringer jeg."},
+ {t:"V2",q:"I weekenden ___ vi i Tivoli. (være, datid)",a:["var"],x:"Verb second after 'I weekenden'. Datid of være = var."},
+ {t:"V2",q:"Efter arbejde ___ hun hjem. (cykle, nutid)",a:["cykler"],x:"Fronted phrase → verb (cykler) before subject (hun)."},
+ {t:"V2",q:"På sygehuset ___ der mange sygeplejersker. (arbejde, nutid)",a:["arbejder"],x:"Place phrase first → verb second."},
+ {t:"V2",q:"Rewrite starting with 'I dag': Jeg arbejder hjemme i dag.",a:["I dag arbejder jeg hjemme"],x:"I dag + verb + subject: I dag arbejder jeg hjemme."},
+ {t:"V2",q:"Rewrite starting with 'I går': Jeg havde en jobsamtale i går.",a:["I går havde jeg en jobsamtale"],x:"I går havde jeg en jobsamtale. Verb (havde) comes second."},
+ {t:"V2",q:"Translate: Today I have sent an application. (start with 'I dag')",a:["I dag har jeg sendt en ansøgning"],x:"I dag har jeg sendt en ansøgning. The finite verb 'har' is second."},
+ // fordi / selvom
+ {t:"fordi/selvom",q:"Jeg kommer ikke, fordi jeg ___ tid. (ikke / har)",a:["ikke har"],x:"In a fordi-clause, ikke goes BEFORE the verb: fordi jeg ikke har tid."},
+ {t:"fordi/selvom",q:"Hun tager jobbet, selvom lønnen ___ høj. (ikke / er)",a:["ikke er"],x:"Subordinate clause (selvom): ikke before the verb → ikke er."},
+ {t:"fordi/selvom",q:"Selvom det regner, ___ jeg på arbejde. (cykle, nutid)",a:["cykler"],x:"When the selvom-clause comes first, the main clause inverts: …, cykler jeg."},
+ {t:"fordi/selvom",q:"Fordi jeg er syg, ___ jeg hjemme i dag. (blive, nutid)",a:["bliver"],x:"Fordi-clause first → main clause verb comes right after the comma: bliver jeg."},
+ {t:"fordi/selvom",q:"Join with 'selvom': Han søger jobbet. Han taler ikke flydende dansk.",a:["Han søger jobbet, selvom han ikke taler flydende dansk","Han søger jobbet selvom han ikke taler flydende dansk"],x:"…, selvom han ikke taler flydende dansk. (ikke before taler)"},
+ {t:"fordi/selvom",q:"Vi bor til leje, fordi vi ___ råd til at købe. (ikke / har)",a:["ikke har"],x:"fordi vi ikke har råd — ikke before the verb in the subordinate clause."},
+ // har / er
+ {t:"har/er",q:"Vi ___ flyttet til Aarhus.",a:["er"],x:"flytte = movement → er."},
+ {t:"har/er",q:"Jeg ___ spist morgenmad.",a:["har"],x:"spise = no movement/change → har."},
+ {t:"har/er",q:"Toget ___ kommet.",a:["er"],x:"komme = movement → er."},
+ {t:"har/er",q:"Hun ___ læst bogen.",a:["har"],x:"læse → har (most verbs)."},
+ {t:"har/er",q:"Han ___ blevet træt.",a:["er"],x:"blive = change of state → er."},
+ {t:"har/er",q:"De ___ arbejdet hele dagen.",a:["har"],x:"arbejde → har."},
+ {t:"har/er",q:"Hun ___ gået hjem.",a:["er"],x:"gå (somewhere) = movement → er."},
+ {t:"har/er",q:"Lægen ___ skrevet en recept.",a:["har"],x:"skrive → har."},
+ {t:"har/er",q:"Jeg ___ boet i København i to år.",a:["har"],x:"bo is not movement → har."},
+ {t:"har/er",q:"Min kollega ___ kommet for sent i dag.",a:["er"],x:"komme → er."},
+ // adjectives indefinite
+ {t:"adjektiv (ubestemt)",q:"Hun arbejder på et ___ sygehus. (stor)",a:["stort"],x:"et-word → +t: et stort sygehus."},
+ {t:"adjektiv (ubestemt)",q:"Vi leder efter en ___ lejlighed. (billig)",a:["billig"],x:"en-word → no ending: en billig lejlighed."},
+ {t:"adjektiv (ubestemt)",q:"De fleste lejligheder er ___. (dyr)",a:["dyre"],x:"Plural → +e: lejlighederne/lejligheder er dyre."},
+ {t:"adjektiv (ubestemt)",q:"Vi har to ___ børn. (lille)",a:["små"],x:"lille → små in the plural."},
+ {t:"adjektiv (ubestemt)",q:"Huslejen er ___. (dyr)",a:["dyr"],x:"husleje is an en-word, singular → dyr (no ending)."},
+ {t:"adjektiv (ubestemt)",q:"Huset er ___. (gammel)",a:["gammelt"],x:"huset (et-word) → gammelt."},
+ {t:"adjektiv (ubestemt)",q:"Lejlighederne er ___. (lille)",a:["små"],x:"Plural of lille = små."},
+ {t:"adjektiv (ubestemt)",q:"Det er et ___ job. (ny)",a:["nyt"],x:"et job → nyt."},
+ {t:"adjektiv (ubestemt)",q:"Firmaet har en ___ stilling. (ledig)",a:["ledig"],x:"en stilling → ledig (no ending)."},
+ // adjectives definite
+ {t:"adjektiv (bestemt)",q:"___ sygehus ligger tæt på. (det + stor)",a:["Det store"],x:"After den/det/de the adjective takes -e: det store sygehus."},
+ {t:"adjektiv (bestemt)",q:"Vi bor i den ___ lejlighed på Nørrebro. (gammel)",a:["gamle"],x:"den + gamle (double m drops)."},
+ {t:"adjektiv (bestemt)",q:"Min ___ kollega er meget sød. (ny)",a:["nye"],x:"After min/din/hans → -e: min nye kollega."},
+ {t:"adjektiv (bestemt)",q:"De ___ lejligheder er dyre. (lille)",a:["små"],x:"Plural of lille is always små: de små lejligheder."},
+ {t:"adjektiv (bestemt)",q:"Den ___ lejlighed er billig. (lille)",a:["lille"],x:"lille never changes in the singular: den lille lejlighed."},
+ {t:"adjektiv (bestemt)",q:"Den ___ lejlighed er billig, men den er lille. (gammel)",a:["gamle"],x:"Den gamle lejlighed."},
+ {t:"adjektiv (bestemt)",q:"Jeg tager ikke det ___ job. (ny)",a:["nye"],x:"det + nye: det nye job."},
+ // prepositions
+ {t:"præpositioner",q:"Vi venter ___ bussen til Nørrebro.",a:["på"],x:"at vente på = to wait for."},
+ {t:"præpositioner",q:"Er du interesseret ___ jobbet?",a:["i"],x:"at være interesseret i."},
+ {t:"præpositioner",q:"Hun søger ___ dansk statsborgerskab.",a:["om"],x:"søge om + permission/citizenship/leave."},
+ {t:"præpositioner",q:"Jeg søger ___ orlov fra mit arbejde.",a:["om"],x:"søge om orlov."},
+ {t:"præpositioner",q:"Vi venter ___ svar på min ansøgning.",a:["på"],x:"vente på svar."},
+ {t:"præpositioner",q:"Translate: I am applying for a job as a nurse.",a:["Jeg søger et job som sygeplejerske","Jeg søger job som sygeplejerske","Jeg søger en stilling som sygeplejerske"],x:"For a job: søge et job / en stilling — NO 'om'."},
+ // datid vs perfektum
+ {t:"datid/perfektum",q:"I sidste uge ___ firmaet to nye kolleger. (ansætte)",a:["ansatte"],x:"Finished + stated time (i sidste uge) → datid: ansatte."},
+ {t:"datid/perfektum",q:"Jeg ___ på svar i to uger. (vente)",a:["har ventet"],x:"Period up to now → perfektum: har ventet."},
+ {t:"datid/perfektum",q:"I går ___ jeg en jobsamtale. (have)",a:["havde"],x:"i går = finished time → datid: havde."},
+ {t:"datid/perfektum",q:"Jeg ___ tre jobsamtaler i år. (have)",a:["har haft"],x:"i år is not over → perfektum: har haft."},
+ {t:"datid/perfektum",q:"Firmaet ___ en ny kollega. (ansætte — no time given)",a:["har ansat"],x:"No time stated, result matters now → har ansat."},
+ {t:"datid/perfektum",q:"I 2024 ___ vi til København. (flytte)",a:["flyttede"],x:"Stated past time (i 2024) → datid: flyttede."},
+ {t:"datid/perfektum",q:"I går ___ jeg hjem. (cykle)",a:["cyklede"],x:"Datid of cykle = cyklede (one k)."},
+ // gender
+ {t:"en/et",q:"___ lejlighed",a:["en"],x:"en lejlighed → lejligheden."},
+ {t:"en/et",q:"___ sygehus",a:["et"],x:"et sygehus → sygehuset."},
+ {t:"en/et",q:"___ ansøgning",a:["en"],x:"en ansøgning."},
+ {t:"en/et",q:"___ job",a:["et"],x:"et job → jobbet."},
+ {t:"en/et",q:"___ recept",a:["en"],x:"en recept."},
+ {t:"en/et",q:"___ hus",a:["et"],x:"et hus → huset."},
+ {t:"en/et",q:"___ kollega",a:["en"],x:"en kollega."},
+ {t:"en/et",q:"___ løn",a:["en"],x:"en løn → lønnen."},
+ {t:"en/et",q:"Vi bor i ___ lille lejlighed.",a:["en"],x:"lejlighed is an en-word: en lille lejlighed."}
+];
+
+/* ---------- Grammar multiple choice ---------- */
+var GMCQ=[
+ {q:"Choose the correct sentence:",o:["I går jeg cyklede på arbejde.","I går cyklede jeg på arbejde.","I går cyklede på arbejde jeg."],c:1,x:"V2: verb second after a fronted time phrase."},
+ {q:"…, fordi jeg ___ tid.",o:["har ikke","ikke har","ikke harer"],c:1,x:"In a fordi-clause, ikke goes before the verb."},
+ {q:"Selvom det regner, ___",o:["jeg cykler på arbejde.","cykler jeg på arbejde.","cykler på arbejde jeg."],c:1,x:"Subordinate clause first → main clause inverts."},
+ {q:"Hun ___ blevet syg.",o:["har","er"],c:1,x:"blive = change of state → er."},
+ {q:"Jeg ___ sendt en ansøgning.",o:["har","er"],c:0,x:"sende → har."},
+ {q:"Vi ___ flyttet til Aarhus.",o:["har","er"],c:1,x:"flytte = movement → er."},
+ {q:"Hun arbejder på et ___ sygehus.",o:["stor","stort","store"],c:1,x:"et-word → +t."},
+ {q:"Lejlighederne er ___.",o:["lille","lilles","små"],c:2,x:"lille → små in the plural."},
+ {q:"Den ___ kollega er sød.",o:["ny","nyt","nye"],c:2,x:"Definite form → always -e."},
+ {q:"Vi bor i den ___ lejlighed.",o:["gammel","gammelt","gamle"],c:2,x:"den gamle lejlighed."},
+ {q:"Which is correct for a JOB?",o:["Jeg søger om et job.","Jeg søger et job.","Jeg søger på et job."],c:1,x:"For jobs Danes say 'søge et job' — no om."},
+ {q:"Hun søger ___ statsborgerskab.",o:["om","på","i"],c:0,x:"søge om statsborgerskab/orlov/tilladelse."},
+ {q:"Vi venter ___ bussen.",o:["for","på","om"],c:1,x:"vente på."},
+ {q:"Er du interesseret ___ jobbet?",o:["på","for","i"],c:2,x:"interesseret i."},
+ {q:"I går ___ jeg en jobsamtale.",o:["har haft","havde","har"],c:1,x:"Finished, stated time → datid."},
+ {q:"Jeg ___ ventet på svar i to uger.",o:["har","havde","er"],c:0,x:"Period up to now → perfektum (har ventet)."},
+ {q:"I sidste uge ___ firmaet to nye kolleger.",o:["har ansat","ansatte","ansætter"],c:1,x:"i sidste uge → datid: ansatte."},
+ {q:"___ lejlighed",o:["en","et"],c:0,x:"en lejlighed."},
+ {q:"___ sygehus",o:["en","et"],c:1,x:"et sygehus."},
+ {q:"Past tense of 'at cykle':",o:["cykkled","cyklede","cyklet"],c:1,x:"cyklede (datid); cyklet is the participle (har cyklet)."}
+];
+
+/* ---------- storage ---------- */
+var LS="dk_pd3_v1";
+var S;
+try{S=JSON.parse(localStorage.getItem(LS)||"null");}catch(e){S=null;}
+if(!S)S={cards:{},days:{},dir:"da",mist:{},drillStats:{}};
+S.cards=S.cards||{};S.days=S.days||{};S.mist=S.mist||{};S.drillStats=S.drillStats||{};
+function save(){try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}}
+function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+var INTERVAL=[0,1,2,4,8,16];
+function st(c){var s=S.cards[c.id];if(!s){s={box:Math.min(5,Math.max(1,c.box||1)),next:c.next||today(),wrong:c.wrong||0,seen:0};}return s;}
+function setSt(c,s){S.cards[c.id]=s;save();}
+function tick(ok){var t=today();S.days[t]=(S.days[t]||0)+1;save();renderStats();}
+function streak(){var n=0,d=new Date();
+ if(!S.days[today()]){d.setDate(d.getDate()-1);} // streak still alive if yesterday studied
+ while(true){var k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");if(S.days[k]){n++;d.setDate(d.getDate()-1);}else break;}
+ return n;}
+function renderStats(){document.getElementById("streak").textContent="🔥 "+streak();document.getElementById("today").textContent="✓ "+(S.days[today()]||0)+" i dag";}
+
+/* ---------- helpers ---------- */
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(m){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m];});}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function norm(s){return String(s).toLowerCase().replace(/[.,!?;:"'«»“”]/g," ").replace(/\s+/g," ").trim();}
+function fold(s){return norm(s).replace(/æ/g,"ae").replace(/ø/g,"oe").replace(/å/g,"aa").replace(/ä/g,"ae").replace(/ö/g,"oe");}
+function check(input,answers){var n=norm(input),f=fold(input);
+ for(var i=0;i<answers.length;i++){if(norm(answers[i])===n)return {ok:true,exact:true,ans:answers[i]};}
+ for(var j=0;j<answers.length;j++){if(fold(answers[j])===f)return {ok:true,exact:false,ans:answers[j]};}
+ return {ok:false,ans:answers[0]};}
+var app=document.getElementById("app");
+function $(id){return document.getElementById(id);}
+
+/* ---------- views ---------- */
+var view="home";
+function go(v){view=v;document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("on",b.dataset.v===v);});
+ window.scrollTo(0,0);({home:home,cards:cardsView,quiz:quizView,drill:drillView,mist:mistView})[v]();}
+document.querySelectorAll("nav button").forEach(function(b){b.addEventListener("click",function(){go(b.dataset.v);});});
+
+function dueList(){var t=today();return CARDS.filter(function(c){return st(c).next<=t;});}
+function home(){
+ var due=dueList().length,boxes=[0,0,0,0,0,0];CARDS.forEach(function(c){boxes[st(c).box]++;});
+ var wrong=CARDS.filter(function(c){return st(c).wrong>0;}).length;
+ var tot=0;for(var k in S.days)tot+=S.days[k];
+ app.innerHTML='<h2>Hej! 👋</h2>'+
+ '<div class="card"><h3>I dag</h3><p class="muted small">'+due+' kort skal gentages · '+wrong+' svære kort · '+ERRORS.length+' fejl i loggen</p>'+
+ '<button class="btn primary" id="hgo">Start flashcards ('+due+')</button>'+
+ '<div class="row"><button class="btn" id="hq">Quiz</button><button class="btn" id="hd">Grammatik</button></div></div>'+
+ '<div class="card"><h3>Leitner-kasser</h3><div class="grid">'+[1,2,3,4,5].map(function(b){return '<div><b>'+boxes[b]+'</b>Kasse '+b+'</div>';}).join("")+'</div>'+
+ '<p class="small muted">Kasse 1 = every day · 2 = 2 days · 3 = 4 days · 4 = 8 days · 5 = 16 days</p></div>'+
+ '<div class="card"><h3>Fremskridt</h3><p class="small">🔥 Streak: <b>'+streak()+'</b> dage<br>✓ Svar i dag: <b>'+(S.days[today()]||0)+'</b><br>Σ Svar i alt: <b>'+tot+'</b><br>📚 Kort i alt: <b>'+CARDS.length+'</b></p></div>'+
+ '<p class="small muted">Progress is saved on this device. Cards from Notion, updated '+DATA_DATE+'.</p>'+
+ '<button class="btn small" id="reset">Nulstil fremskridt (reset)</button>';
+ $("hgo").onclick=function(){go("cards");};$("hq").onclick=function(){go("quiz");};$("hd").onclick=function(){go("drill");};
+ $("reset").onclick=function(){if(confirm("Reset all progress on this device?")){S={cards:{},days:{},dir:S.dir,mist:{},drillStats:{}};save();renderStats();home();}};
+}
+
+/* Flashcards */
+var fc={queue:[],i:0,flipped:false,done:0};
+function buildQueue(all){var t=today();var list=all?CARDS.slice():dueList();
+ list=shuffle(list);list.sort(function(a,b){var sa=st(a),sb=st(b);
+  if((sb.wrong>0)!==(sa.wrong>0))return (sb.wrong>0)-(sa.wrong>0);
+  if(sb.wrong!==sa.wrong)return sb.wrong-sa.wrong;
+  if(sa.next!==sb.next)return sa.next<sb.next?-1:1;return sa.box-sb.box;});
+ fc={queue:list,i:0,flipped:false,done:0};}
+function cardsView(){buildQueue(false);renderCard();}
+function renderCard(){
+ var dirHtml='<div class="seg"><button id="dDA" class="'+(S.dir==="da"?"on":"")+'">DA → EN</button><button id="dEN" class="'+(S.dir==="en"?"on":"")+'">EN → DA</button></div>';
+ if(fc.i>=fc.queue.length){
+  app.innerHTML=dirHtml+'<div class="card" style="text-align:center"><h2>Færdig! 🎉</h2><p>'+(fc.done?('Du gennemgik '+fc.done+' kort.'):'Ingen kort skal gentages lige nu.')+'</p><button class="btn primary" id="all">Øv alle kort alligevel</button></div>';
+  bindDir();$("all").onclick=function(){buildQueue(true);renderCard();};return;}
+ var c=fc.queue[fc.i],s=st(c);
+ var front=S.dir==="da"?c.da:c.en,back=S.dir==="da"?c.en:c.da;
+ app.innerHTML=dirHtml+'<div class="bar"><div style="width:'+Math.round(fc.i/fc.queue.length*100)+'%"></div></div>'+
+ '<p class="small muted">'+(fc.i+1)+' / '+fc.queue.length+' · Kasse '+s.box+'</p>'+
+ '<div class="card flip" id="flip"><div><span class="tag">'+esc(c.type)+'</span><span class="tag">'+esc(c.topic)+'</span>'+(s.wrong>0?'<span class="tag warn">✗ '+s.wrong+'</span>':'')+'</div>'+
+ '<div class="big">'+esc(front)+'</div>'+
+ (fc.flipped?'<hr style="width:60%;border:0;border-top:1px solid var(--line)"><div class="big" style="font-size:22px">'+esc(back)+'</div>'+(c.ex?'<div class="ex">'+esc(c.ex)+'</div>':''):'<p class="muted small">Tryk for at vende (tap to flip)</p>')+
+ '</div>'+
+ (fc.flipped?'<div class="row"><button class="btn bad" id="no">✗ Didn\'t</button><button class="btn ok" id="yes">✓ Knew it</button></div>':'<button class="btn primary" id="show">Vis svar</button>');
+ bindDir();
+ $("flip").onclick=function(){fc.flipped=!fc.flipped;renderCard();};
+ if(fc.flipped){$("yes").onclick=function(){grade(true);};$("no").onclick=function(){grade(false);};}
+ else $("show").onclick=function(){fc.flipped=true;renderCard();};
+}
+function bindDir(){$("dDA").onclick=function(){S.dir="da";save();fc.flipped=false;renderCard();};$("dEN").onclick=function(){S.dir="en";save();fc.flipped=false;renderCard();};}
+function grade(ok){var c=fc.queue[fc.i],s=st(c);s.seen=(s.seen||0)+1;
+ if(ok){s.box=Math.min(5,s.box+1);s.next=addDays(INTERVAL[s.box]);}
+ else{s.box=1;s.wrong=(s.wrong||0)+1;s.next=today();
+  // see it again later this session
+  if(fc.queue.slice(fc.i+1).indexOf(c)<0)fc.queue.push(c);}
+ setSt(c,s);tick(ok);fc.done++;fc.i++;fc.flipped=false;renderCard();}
+
+/* MCQ quiz */
+var qz=null;
+function makeVocabQ(){var pool=CARDS.filter(function(c){return c.type!=="grammar";});
+ var c=pool[Math.floor(Math.random()*pool.length)];var rev=Math.random()<0.5;
+ var others=shuffle(pool.filter(function(o){return o!==c&&(o.type===c.type||Math.random()<0.3);})).slice(0,3);
+ if(others.length<3)others=shuffle(pool.filter(function(o){return o!==c;})).slice(0,3);
+ var opts=shuffle([c].concat(others));
+ return {q:rev?'What is the Danish for: "'+c.en+'"?':'What does "'+c.da+'" mean?',o:opts.map(function(o){return rev?o.da:o.en;}),c:opts.indexOf(c),x:c.ex?("Eksempel: "+c.ex):"",card:c};}
+function quizView(){var qs=[];var g=shuffle(GMCQ).slice(0,5);for(var i=0;i<5;i++)qs.push(makeVocabQ());
+ qz={qs:shuffle(qs.concat(g)),i:0,score:0,answered:false};renderQ();}
+function renderQ(){
+ if(qz.i>=qz.qs.length){app.innerHTML='<div class="card" style="text-align:center"><h2>'+qz.score+' / '+qz.qs.length+'</h2><p>'+(qz.score>=8?"Flot klaret! 🎉":qz.score>=5?"Godt gået! 👍":"Bliv ved! 💪")+'</p><button class="btn primary" id="again">Ny quiz</button></div>';$("again").onclick=quizView;return;}
+ var q=qz.qs[qz.i];
+ app.innerHTML='<div class="bar"><div style="width:'+Math.round(qz.i/qz.qs.length*100)+'%"></div></div><p class="small muted">Spørgsmål '+(qz.i+1)+' / '+qz.qs.length+' · Score '+qz.score+'</p>'+
+ '<div class="card"><div class="prompt">'+esc(q.q)+'</div>'+q.o.map(function(o,i){return '<button class="opt" data-i="'+i+'">'+esc(o)+'</button>';}).join("")+'<div id="fb"></div></div>';
+ app.querySelectorAll(".opt").forEach(function(b){b.onclick=function(){if(qz.answered)return;qz.answered=true;var i=+b.dataset.i,ok=i===q.c;
+  if(ok)qz.score++;app.querySelectorAll(".opt")[q.c].classList.add("right");if(!ok)b.classList.add("wrong");
+  if(q.card&&!ok){var s=st(q.card);s.wrong=(s.wrong||0)+1;s.box=1;s.next=today();setSt(q.card,s);}
+  tick(ok);
+  $("fb").innerHTML='<div class="fb '+(ok?"ok":"bad")+'"><b>'+(ok?"Rigtigt! ✅":"Ikke helt ❌ — "+esc(q.o[q.c]))+'</b>'+(q.x?'<br><span class="small">'+esc(q.x)+'</span>':'')+'</div><button class="btn primary" id="nx">Næste →</button>';
+  $("nx").onclick=function(){qz.i++;qz.answered=false;renderQ();};};});
+}
+
+/* Typed drills */
+var dr=null,drTopic=S.drTopic||"all";
+function drillView(){var topics=[];DRILLS.forEach(function(d){if(topics.indexOf(d.t)<0)topics.push(d.t);});
+ var pool=DRILLS.filter(function(d){return drTopic==="all"||d.t===drTopic;});
+ dr={list:shuffle(pool).slice(0,drTopic==="all"?12:pool.length),i:0,score:0,answered:false,topics:topics};renderDrill();}
+function startTopicDrill(t){drTopic=t;S.drTopic=t;save();go("drill");}
+function renderDrill(){
+ var sel='<select id="tsel"><option value="all">Alle emner (12 random)</option>'+dr.topics.map(function(t){return '<option value="'+esc(t)+'"'+(t===drTopic?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';
+ if(dr.i>=dr.list.length){app.innerHTML=sel+'<div class="card" style="text-align:center"><h2>'+dr.score+' / '+dr.list.length+'</h2><p>'+(dr.score===dr.list.length?"Perfekt! 🎉":"Godt arbejde! Prøv igen for at øve mere.")+'</p><button class="btn primary" id="again">Igen</button></div>';
+  bindSel();$("again").onclick=drillView;return;}
+ var d=dr.list[dr.i];
+ app.innerHTML=sel+'<div class="bar"><div style="width:'+Math.round(dr.i/dr.list.length*100)+'%"></div></div><p class="small muted">'+(dr.i+1)+' / '+dr.list.length+' · '+esc(d.t)+' · Score '+dr.score+'</p>'+
+ '<div class="card"><div class="prompt">'+esc(d.q).replace(/___/g,'<b>____</b>')+'</div>'+
+ '<form id="f" autocomplete="off"><input type="text" id="ans" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Skriv dit svar…">'+
+ '<button class="btn primary" type="submit" id="sub">Tjek</button></form><div id="fb"></div></div>'+
+ '<p class="small muted">Tip: ae / oe / aa are accepted for æ / ø / å.</p>';
+ bindSel();var inp=$("ans");
+ $("f").onsubmit=function(e){e.preventDefault();if(dr.answered){dr.i++;dr.answered=false;renderDrill();return;}
+  if(!inp.value.trim())return;var r=check(inp.value,d.a);dr.answered=true;if(r.ok)dr.score++;
+  var ds=S.drillStats[d.t]||{ok:0,n:0};ds.n++;if(r.ok)ds.ok++;S.drillStats[d.t]=ds;tick(r.ok);
+  inp.readOnly=true;$("sub").textContent="Næste →";
+  $("fb").innerHTML='<div class="fb '+(r.ok?"ok":"bad")+'"><b>'+(r.ok?(r.exact?"Rigtigt! ✅":"Rigtigt! ✅ Correct spelling: "+esc(r.ans)):"Ikke helt ❌")+'</b>'+
+   (!r.ok?'<br>Svar: <b>'+esc(d.a[0])+'</b>':'')+'<br><span class="small">'+esc(d.x)+'</span></div>';};
+ setTimeout(function(){try{inp.focus();}catch(e){}},50);
+}
+function bindSel(){$("tsel").onchange=function(){drTopic=this.value;S.drTopic=drTopic;save();drillView();};}
+
+/* Mistakes */
+var PATTERN_TOPIC={"gender en/et":"en/et","spelling":"datid/perfektum","word order":"V2","har/er":"har/er","adjective endings":"adjektiv (ubestemt)","prepositions":"præpositioner"};
+function mistView(){
+ var hard=CARDS.filter(function(c){return st(c).wrong>0;}).sort(function(a,b){return st(b).wrong-st(a).wrong;});
+ var h='<h2>Mine fejl</h2><p class="small muted">From your Notion error log. Try to correct each one in your head, then tap to check.</p>';
+ ERRORS.forEach(function(e,i){var m=S.mist[i]||{};
+  h+='<div class="card"><span class="tag">'+esc(e.pattern)+'</span><span class="tag">'+esc(e.date)+'</span>'+(m.ok?'<span class="tag">✓ '+m.ok+'</span>':'')+
+  '<p class="prompt"><span class="strike">'+esc(e.mistake)+'</span></p>'+
+  '<div id="mc'+i+'"><button class="btn" data-r="'+i+'">Vis rettelse</button></div></div>';});
+ h+='<div class="card"><h3>Øv dine fejl-mønstre</h3>'+
+  '<button class="btn" data-t="en/et">en / et (køn)</button><button class="btn" data-t="datid/perfektum">Stavning & datid (cyklede)</button><button class="btn" data-t="V2">Ordstilling (V2)</button></div>';
+ h+='<div class="card"><h3>Svære kort ('+hard.length+')</h3>'+(hard.length?hard.map(function(c){return '<p><b>'+esc(c.da)+'</b> — '+esc(c.en)+' <span class="tag warn">✗ '+st(c).wrong+'</span></p>';}).join("")+'<button class="btn primary" id="hardgo">Øv svære kort</button>':'<p class="muted">Ingen endnu 🎉</p>')+'</div>';
+ app.innerHTML=h;
+ app.querySelectorAll("[data-r]").forEach(function(b){b.onclick=function(){var i=+b.dataset.r,e=ERRORS[i];
+  $("mc"+i).innerHTML='<div class="fb ok">✅ '+esc(e.correction)+'</div><div class="row"><button class="btn bad" data-m="'+i+'" data-v="0">Stadig svær</button><button class="btn ok" data-m="'+i+'" data-v="1">Jeg har den</button></div>';
+  $("mc"+i).querySelectorAll("[data-m]").forEach(function(x){x.onclick=function(){var m=S.mist[i]||{ok:0,no:0};if(x.dataset.v==="1")m.ok++;else m.no++;S.mist[i]=m;save();tick(x.dataset.v==="1");
+   $("mc"+i).innerHTML='<div class="fb ok">✅ '+esc(e.correction)+'</div><p class="small muted">Gemt.</p>';};});};});
+ app.querySelectorAll("[data-t]").forEach(function(b){b.onclick=function(){startTopicDrill(b.dataset.t);};});
+ if($("hardgo"))$("hardgo").onclick=function(){go("cards");fc={queue:hard.slice(),i:0,flipped:false,done:0};renderCard();};
+}
+
+renderStats();go("home");
+if("serviceWorker" in navigator&&location.protocol==="https:"){navigator.serviceWorker.register("sw.js").catch(function(){});}
+</script>
+</body>
+</html>
