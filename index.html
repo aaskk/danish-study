@@ -190,6 +190,8 @@ function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return d.getFullYe
 var INTERVAL=[0,1,2,4,8,16];
 function st(c){var s=S.cards[c.id];if(!s){s={box:Math.min(5,Math.max(1,c.box||1)),next:c.next||today(),wrong:c.wrong||0,seen:0};}return s;}
 function setSt(c,s){S.cards[c.id]=s;save();}
+function logEv(e){e.t=Date.now();S.log=S.log||[];S.log.push(e);
+ if(S.log.length>3000){var cut=S.lastExportedAt||0;S.log=S.log.filter(function(x){return x.t>cut;}).slice(-3000);}save();}
 function tick(ok){var t=today();S.days[t]=(S.days[t]||0)+1;save();renderStats();}
 function streak(){var n=0,d=new Date();
  if(!S.days[today()]){d.setDate(d.getDate()-1);} // streak still alive if yesterday studied
@@ -224,6 +226,7 @@ function home(){
  '<div class="card"><h3>I dag</h3><p class="muted small">'+due+' kort skal gentages · '+wrong+' svære kort · '+ERRORS.length+' fejl i loggen</p>'+
  (undoneCount()?'<button class="btn primary" id="hless">📖 '+undoneCount()+' lektion'+(undoneCount()>1?'er':'')+' mangler</button>':'')+'<button class="btn'+(undoneCount()?'':' primary')+'" id="hgo">Start flashcards ('+due+')</button>'+
  '<div class="row"><button class="btn" id="hq">Quiz</button><button class="btn" id="hd">Grammatik</button></div></div>'+
+ '<div class="card"><h3>Send til tutor</h3><p class="small muted">'+newEvents().length+' nye øvelser siden sidste rapport.</p>'+tutorBtn()+'</div>'+
  '<div class="card"><h3>Leitner-kasser</h3><div class="grid">'+[1,2,3,4,5].map(function(b){return '<div><b>'+boxes[b]+'</b>Kasse '+b+'</div>';}).join("")+'</div>'+
  '<p class="small muted">Kasse 1 = every day · 2 = 2 days · 3 = 4 days · 4 = 8 days · 5 = 16 days</p></div>'+
  '<div class="card"><h3>Fremskridt</h3><p class="small">🔥 Streak: <b>'+streak()+'</b> dage<br>✓ Svar i dag: <b>'+(S.days[today()]||0)+'</b><br>Σ Svar i alt: <b>'+tot+'</b><br>📚 Kort i alt: <b>'+CARDS.length+'</b></p></div>'+
@@ -278,19 +281,86 @@ function renderLQ(l,i){var q=l.quiz[i],s=lst(l),a=s.ans[i],el=$("qa"+i);
   if(r.ok)s2.ans[i]={input:v,ok:true,exact:r.exact,match:r.ans};
   else if(q.self)s2.ans[i]={input:v,ok:false,pending:true};
   else s2.ans[i]={input:v,ok:false};
-  if(!s2.ans[i].pending)tick(r.ok);
+  if(!s2.ans[i].pending){tick(r.ok);logEv({k:"lesson",ok:r.ok,item:q.q,typed:v,correct:q.a[0],topic:l.date+" "+l.title+" #"+(i+1)});}
   setLst(l,s2);renderLQ(l,i);renderLSum(l);};
- el.querySelectorAll("[data-sg]").forEach(function(b){b.onclick=function(){var s2=lst(l),ok=b.dataset.sg==="1";s2.ans[i]={input:s2.ans[i].input,ok:ok,self:true};tick(ok);setLst(l,s2);renderLQ(l,i);renderLSum(l);};});
+ el.querySelectorAll("[data-sg]").forEach(function(b){b.onclick=function(){var s2=lst(l),ok=b.dataset.sg==="1";s2.ans[i]={input:s2.ans[i].input,ok:ok,self:true};tick(ok);logEv({k:"lesson",ok:ok,self:true,item:q.q,typed:s2.ans[i].input,correct:q.a[0],topic:l.date+" "+l.title+" #"+(i+1)});setLst(l,s2);renderLQ(l,i);renderLSum(l);};});
 }
 function renderLSum(l){var s=lst(l),qn=l.quiz.length,keys=Object.keys(s.ans),done=keys.filter(function(k){return !s.ans[k].pending;}).length,score=keys.filter(function(k){return s.ans[k].ok;}).length;
- if(done===qn&&!s.finished){s.finished=true;s.done=true;s.score=score;setLst(l,s);}
+ if(done===qn&&!s.finished){s.finished=true;s.done=true;s.score=score;setLst(l,s);logEv({k:"lessonDone",item:l.date+" "+l.title,score:score,of:qn});}
  var h='<div class="card" style="text-align:center">'+(done===qn?'<h2>'+score+' / '+qn+'</h2><p>'+(score===qn?'Perfekt! 🎉':'Godt gået! 👍')+' Lektionen er markeret som færdig.</p>':'<p class="muted">'+done+' / '+qn+' besvaret</p>')+
  '<button class="btn'+(s.done?'':' primary')+'" id="ldone">'+(s.done?'Markér som ikke færdig':'Markér som færdig ✅')+'</button>'+
- (keys.length?'<button class="btn" id="lredo">Tag quizzen igen</button>':'')+'</div>';
+ (keys.length?'<button class="btn" id="lredo">Tag quizzen igen</button>':'')+(done===qn?tutorBtn():'')+'</div>';
  $("lsum").innerHTML=h;
  $("ldone").onclick=function(){var s2=lst(l);s2.done=!s2.done;setLst(l,s2);renderLSum(l);};
  if($("lredo"))$("lredo").onclick=function(){var s2=lst(l);s2.ans={};s2.finished=false;setLst(l,s2);lessonDetail(l.date);};
 }
+
+
+/* ---------- Send til tutor ---------- */
+function tutorBtn(){return '<button class="btn primary" data-tutor="1">📤 Send til tutor</button>';}
+document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("[data-tutor]");if(b){e.preventDefault();tutorView();}});
+function newEvents(upto){var from=S.lastExportedAt||0;return (S.log||[]).filter(function(x){return x.t>from&&(upto==null||x.t<=upto);});}
+function p2(n){return String(n).padStart(2,"0");}
+function fmtTs(ms){var d=new Date(ms);return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+" "+p2(d.getHours())+":"+p2(d.getMinutes());}
+function tzLabel(){var o=-new Date().getTimezoneOffset();return "UTC"+(o>=0?"+":"-")+Math.floor(Math.abs(o)/60)+(Math.abs(o)%60?":"+p2(Math.abs(o)%60):"");}
+function oneLine(s){return String(s==null?"":s).replace(/\s+/g," ").trim();}
+function buildReport(ev){
+ var L=["DANSK-APP RAPPORT"];
+ if(!ev.length){L.push("Ingen ny aktivitet siden "+(S.lastExportedAt?fmtTs(S.lastExportedAt)+" ("+tzLabel()+")":"start")+".");return L.join("\n");}
+ var from=S.lastExportedAt?S.lastExportedAt:ev[0].t,to=ev[ev.length-1].t;
+ L.push("Periode: "+fmtTs(from)+" -> "+fmtTs(to)+" ("+tzLabel()+")"+(S.lastExportedAt?"":" [første rapport]"));
+ function cnt(k){var a=ev.filter(function(x){return x.k===k;});return {n:a.length,ok:a.filter(function(x){return x.ok;}).length};}
+ var c=cnt("card"),q=cnt("quiz"),d=cnt("drill"),l=cnt("lesson"),m=cnt("mistake");
+ var done=ev.filter(function(x){return x.k==="lessonDone";});
+ L.push("Kort: "+c.n+" gennemgået, "+c.ok+" kunne, "+(c.n-c.ok)+" kunne ikke");
+ L.push("Quiz: "+q.ok+"/"+q.n+" rigtige");
+ L.push("Grammatik-drills: "+d.ok+"/"+d.n+" rigtige");
+ L.push("Lektions-quiz: "+l.ok+"/"+l.n+" rigtige ("+ev.filter(function(x){return x.k==="lesson"&&x.self;}).length+" selvvurderet)");
+ L.push("Lektioner færdige: "+(done.length?done.map(function(x){return x.item+" ("+x.score+"/"+x.of+")";}).join("; "):"0"));
+ L.push("Fejl-review: "+m.n+" ("+m.ok+" har den, "+(m.n-m.ok)+" stadig svær)");
+ // misses aggregated by kind+item
+ var miss={},order=[];
+ ev.forEach(function(x){if(x.ok||x.k==="card"||x.k==="lessonDone"||x.k==="mistake")return;var key=x.k+"|"+x.item;
+  if(!miss[key]){miss[key]={x:x,n:0,typed:[]};order.push(key);}var a=miss[key];a.n++;var t=oneLine(x.typed);if(t&&a.typed.indexOf(t)<0)a.typed.push(t);});
+ L.push("");L.push("FEJL ("+order.length+"):");
+ if(!order.length)L.push("- ingen");
+ order.forEach(function(k){var a=miss[k],x=a.x;L.push("- ["+x.k+" | "+oneLine(x.topic)+"] "+oneLine(x.item)+" | skrev: "+a.typed.map(function(t){return '"'+t+'"';}).join(", ")+" | rigtigt: \""+oneLine(x.correct)+"\""+(x.self?" | selvvurderet":"")+(a.n>1?" | x"+a.n:""));});
+ var dc={},dorder=[];ev.forEach(function(x){if(x.k!=="card"||x.ok)return;if(!dc[x.item]){dc[x.item]={x:x,n:0};dorder.push(x.item);}dc[x.item].n++;});
+ L.push("");L.push("KORT 'KUNNE IKKE' ("+dorder.length+"):");
+ if(!dorder.length)L.push("- ingen");
+ dorder.forEach(function(k){var a=dc[k];L.push("- "+oneLine(k)+" = "+oneLine(a.x.correct)+" ["+oneLine(a.x.topic)+"]"+(a.n>1?" | x"+a.n:""));});
+ var hard=ev.filter(function(x){return x.k==="mistake"&&!x.ok;});
+ if(hard.length){L.push("");L.push("FEJL-LOG 'STADIG SVÆR':");var seen={};hard.forEach(function(x){if(seen[x.item])return;seen[x.item]=1;L.push("- "+oneLine(x.item)+" -> "+oneLine(x.correct)+" ["+oneLine(x.topic)+"]");});}
+ L.push("SLUT");
+ return L.join("\n");}
+function copyText(text){
+ function fallback(){var ta=document.createElement("textarea");ta.value=text;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.top="0";ta.style.left="0";ta.style.opacity="0";ta.style.fontSize="16px";
+  document.body.appendChild(ta);ta.contentEditable=true;ta.readOnly=false;var r=document.createRange();r.selectNodeContents(ta);var sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);ta.select();ta.setSelectionRange(0,text.length);
+  var ok=false;try{ok=document.execCommand("copy");}catch(e){ok=false;}document.body.removeChild(ta);return ok;}
+ if(navigator.clipboard&&window.isSecureContext){return navigator.clipboard.writeText(text).then(function(){return true;},function(){return fallback();});}
+ return Promise.resolve(fallback());}
+function tutorView(){
+ var upto=Date.now(),ev=newEvents(upto),text=buildReport(ev);
+ document.querySelectorAll("nav button").forEach(function(b){b.classList.remove("on");});window.scrollTo(0,0);
+ app.innerHTML='<h2>📤 Send til tutor</h2><p class="small muted">'+(ev.length?ev.length+' nye øvelser. Tap <b>Kopier</b>, then paste it into the chat with your tutor.':'Ingen ny aktivitet siden sidste rapport.')+'</p>'+
+ '<textarea id="rep" readonly style="width:100%;min-height:260px;font:13px/1.4 ui-monospace,Menlo,monospace;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--fg);padding:10px">'+esc(text)+'</textarea>'+
+ '<div id="cpmsg"></div>'+
+ (ev.length?'<button class="btn primary" id="cp">📋 Kopier</button>':'')+
+ (S.lastExport?'<button class="btn" id="last">Vis sidste rapport ('+esc(fmtTs(S.lastExport.at))+')</button>':'')+
+ '<button class="btn" id="tback">Tilbage</button>';
+ $("tback").onclick=function(){go("home");};
+ if($("last"))$("last").onclick=showLast;
+ if($("cp"))$("cp").onclick=function(){copyText(text).then(function(ok){
+  if(ok){S.lastExportedAt=upto;S.lastExport={text:text,at:Date.now(),n:ev.length};save();
+   $("cpmsg").innerHTML='<div class="fb ok">✅ Kopieret! Paste it into the chat. Next report starts from here.</div>';$("cp").remove();}
+  else{$("cpmsg").innerHTML='<div class="fb bad">Couldn\'t copy automatically. Select the text above and copy it by hand – the report stays available until a copy succeeds.</div>';}});};
+}
+function showLast(){var t=S.lastExport?S.lastExport.text:"";
+ app.innerHTML='<h2>Sidste rapport</h2><p class="small muted">Copied '+esc(fmtTs(S.lastExport.at))+'. Re-copying does not change what the next report includes.</p>'+
+ '<textarea id="rep" readonly style="width:100%;min-height:260px;font:13px/1.4 ui-monospace,Menlo,monospace;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--fg);padding:10px">'+esc(t)+'</textarea><div id="cpmsg"></div>'+
+ '<button class="btn primary" id="cp2">📋 Kopier igen</button><button class="btn" id="tback">Tilbage</button>';
+ $("tback").onclick=tutorView;
+ $("cp2").onclick=function(){copyText(t).then(function(ok){$("cpmsg").innerHTML=ok?'<div class="fb ok">✅ Kopieret igen.</div>':'<div class="fb bad">Couldn\'t copy – select the text and copy by hand.</div>';});};}
 
 /* Flashcards */
 var fc={queue:[],i:0,flipped:false,done:0};
@@ -304,7 +374,7 @@ function cardsView(){buildQueue(false);renderCard();}
 function renderCard(){
  var dirHtml='<div class="seg"><button id="dDA" class="'+(S.dir==="da"?"on":"")+'">DA → EN</button><button id="dEN" class="'+(S.dir==="en"?"on":"")+'">EN → DA</button></div>';
  if(fc.i>=fc.queue.length){
-  app.innerHTML=dirHtml+'<div class="card" style="text-align:center"><h2>Færdig! 🎉</h2><p>'+(fc.done?('Du gennemgik '+fc.done+' kort.'):'Ingen kort skal gentages lige nu.')+'</p><button class="btn primary" id="all">Øv alle kort alligevel</button></div>';
+  app.innerHTML=dirHtml+'<div class="card" style="text-align:center"><h2>Færdig! 🎉</h2><p>'+(fc.done?('Du gennemgik '+fc.done+' kort.'):'Ingen kort skal gentages lige nu.')+'</p><button class="btn primary" id="all">Øv alle kort alligevel</button>'+(fc.done?tutorBtn():'')+'</div>';
   bindDir();$("all").onclick=function(){buildQueue(true);renderCard();};return;}
  var c=fc.queue[fc.i],s=st(c);
  var front=S.dir==="da"?c.da:c.en,back=S.dir==="da"?c.en:c.da;
@@ -326,7 +396,7 @@ function grade(ok){var c=fc.queue[fc.i],s=st(c);s.seen=(s.seen||0)+1;
  else{s.box=1;s.wrong=(s.wrong||0)+1;s.next=today();
   // see it again later this session
   if(fc.queue.slice(fc.i+1).indexOf(c)<0)fc.queue.push(c);}
- setSt(c,s);tick(ok);fc.done++;fc.i++;fc.flipped=false;renderCard();}
+ setSt(c,s);tick(ok);logEv({k:"card",ok:ok,item:c.da,correct:c.en,topic:c.topic,dir:S.dir});fc.done++;fc.i++;fc.flipped=false;renderCard();}
 
 /* MCQ quiz */
 var qz=null;
@@ -339,14 +409,14 @@ function makeVocabQ(){var pool=CARDS.filter(function(c){return c.type!=="grammar
 function quizView(){var qs=[];var g=shuffle(GMCQ).slice(0,5);for(var i=0;i<5;i++)qs.push(makeVocabQ());
  qz={qs:shuffle(qs.concat(g)),i:0,score:0,answered:false};renderQ();}
 function renderQ(){
- if(qz.i>=qz.qs.length){app.innerHTML='<div class="card" style="text-align:center"><h2>'+qz.score+' / '+qz.qs.length+'</h2><p>'+(qz.score>=8?"Flot klaret! 🎉":qz.score>=5?"Godt gået! 👍":"Bliv ved! 💪")+'</p><button class="btn primary" id="again">Ny quiz</button></div>';$("again").onclick=quizView;return;}
+ if(qz.i>=qz.qs.length){app.innerHTML='<div class="card" style="text-align:center"><h2>'+qz.score+' / '+qz.qs.length+'</h2><p>'+(qz.score>=8?"Flot klaret! 🎉":qz.score>=5?"Godt gået! 👍":"Bliv ved! 💪")+'</p><button class="btn primary" id="again">Ny quiz</button>'+tutorBtn()+'</div>';$("again").onclick=quizView;return;}
  var q=qz.qs[qz.i];
  app.innerHTML='<div class="bar"><div style="width:'+Math.round(qz.i/qz.qs.length*100)+'%"></div></div><p class="small muted">Spørgsmål '+(qz.i+1)+' / '+qz.qs.length+' · Score '+qz.score+'</p>'+
  '<div class="card"><div class="prompt">'+esc(q.q)+'</div>'+q.o.map(function(o,i){return '<button class="opt" data-i="'+i+'">'+esc(o)+'</button>';}).join("")+'<div id="fb"></div></div>';
  app.querySelectorAll(".opt").forEach(function(b){b.onclick=function(){if(qz.answered)return;qz.answered=true;var i=+b.dataset.i,ok=i===q.c;
   if(ok)qz.score++;app.querySelectorAll(".opt")[q.c].classList.add("right");if(!ok)b.classList.add("wrong");
   if(q.card&&!ok){var s=st(q.card);s.wrong=(s.wrong||0)+1;s.box=1;s.next=today();setSt(q.card,s);}
-  tick(ok);
+  tick(ok);logEv({k:"quiz",ok:ok,item:q.q,typed:q.o[i],correct:q.o[q.c],topic:q.card?("ord: "+q.card.topic):"grammatik"});
   $("fb").innerHTML='<div class="fb '+(ok?"ok":"bad")+'"><b>'+(ok?"Rigtigt! ✅":"Ikke helt ❌ — "+esc(q.o[q.c]))+'</b>'+(q.x?'<br><span class="small">'+esc(q.x)+'</span>':'')+'</div><button class="btn primary" id="nx">Næste →</button>';
   $("nx").onclick=function(){qz.i++;qz.answered=false;renderQ();};};});
 }
@@ -359,7 +429,7 @@ function drillView(){var topics=[];DRILLS.forEach(function(d){if(topics.indexOf(
 function startTopicDrill(t){drTopic=t;S.drTopic=t;save();go("drill");}
 function renderDrill(){
  var sel='<select id="tsel"><option value="all">Alle emner (12 random)</option>'+dr.topics.map(function(t){return '<option value="'+esc(t)+'"'+(t===drTopic?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';
- if(dr.i>=dr.list.length){app.innerHTML=sel+'<div class="card" style="text-align:center"><h2>'+dr.score+' / '+dr.list.length+'</h2><p>'+(dr.score===dr.list.length?"Perfekt! 🎉":"Godt arbejde! Prøv igen for at øve mere.")+'</p><button class="btn primary" id="again">Igen</button></div>';
+ if(dr.i>=dr.list.length){app.innerHTML=sel+'<div class="card" style="text-align:center"><h2>'+dr.score+' / '+dr.list.length+'</h2><p>'+(dr.score===dr.list.length?"Perfekt! 🎉":"Godt arbejde! Prøv igen for at øve mere.")+'</p><button class="btn primary" id="again">Igen</button>'+tutorBtn()+'</div>';
   bindSel();$("again").onclick=drillView;return;}
  var d=dr.list[dr.i];
  app.innerHTML=sel+'<div class="bar"><div style="width:'+Math.round(dr.i/dr.list.length*100)+'%"></div></div><p class="small muted">'+(dr.i+1)+' / '+dr.list.length+' · '+esc(d.t)+' · Score '+dr.score+'</p>'+
@@ -370,7 +440,7 @@ function renderDrill(){
  bindSel();var inp=$("ans");
  $("f").onsubmit=function(e){e.preventDefault();if(dr.answered){dr.i++;dr.answered=false;renderDrill();return;}
   if(!inp.value.trim())return;var r=check(inp.value,d.a);dr.answered=true;if(r.ok)dr.score++;
-  var ds=S.drillStats[d.t]||{ok:0,n:0};ds.n++;if(r.ok)ds.ok++;S.drillStats[d.t]=ds;tick(r.ok);
+  var ds=S.drillStats[d.t]||{ok:0,n:0};ds.n++;if(r.ok)ds.ok++;S.drillStats[d.t]=ds;tick(r.ok);logEv({k:"drill",ok:r.ok,item:d.q,typed:inp.value,correct:d.a[0],topic:d.t});
   inp.readOnly=true;$("sub").textContent="Næste →";
   $("fb").innerHTML='<div class="fb '+(r.ok?"ok":"bad")+'"><b>'+(r.ok?(r.exact?"Rigtigt! ✅":"Rigtigt! ✅ Correct spelling: "+esc(r.ans)):"Ikke helt ❌")+'</b>'+
    (!r.ok?'<br>Svar: <b>'+esc(d.a[0])+'</b>':'')+'<br><span class="small">'+esc(d.x)+'</span></div>';};
@@ -393,7 +463,7 @@ function mistView(){
  app.innerHTML=h;
  app.querySelectorAll("[data-r]").forEach(function(b){b.onclick=function(){var i=+b.dataset.r,e=ERRORS[i];
   $("mc"+i).innerHTML='<div class="fb ok">✅ '+esc(e.correction)+'</div><div class="row"><button class="btn bad" data-m="'+i+'" data-v="0">Stadig svær</button><button class="btn ok" data-m="'+i+'" data-v="1">Jeg har den</button></div>';
-  $("mc"+i).querySelectorAll("[data-m]").forEach(function(x){x.onclick=function(){var m=S.mist[i]||{ok:0,no:0};if(x.dataset.v==="1")m.ok++;else m.no++;S.mist[i]=m;save();tick(x.dataset.v==="1");
+  $("mc"+i).querySelectorAll("[data-m]").forEach(function(x){x.onclick=function(){var m=S.mist[i]||{ok:0,no:0};if(x.dataset.v==="1")m.ok++;else m.no++;S.mist[i]=m;save();tick(x.dataset.v==="1");logEv({k:"mistake",ok:x.dataset.v==="1",item:e.mistake,correct:e.correction,topic:e.pattern});
    $("mc"+i).innerHTML='<div class="fb ok">✅ '+esc(e.correction)+'</div><p class="small muted">Gemt.</p>';};});};});
  app.querySelectorAll("[data-t]").forEach(function(b){b.onclick=function(){startTopicDrill(b.dataset.t);};});
  if($("hardgo"))$("hardgo").onclick=function(){go("cards");fc={queue:hard.slice(),i:0,flipped:false,done:0};renderCard();};
